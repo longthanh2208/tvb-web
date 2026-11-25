@@ -1,0 +1,201 @@
+@model Web_Baotri.Models.BaoCaoViewModel
+@{
+    ViewData["Title"] = "Báo cáo thống kê hoạt động";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header Title -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-bar-chart-line text-primary"></i>
+                Báo cáo thống kê hoạt động xưởng
+            </h4>
+            <div class="text-muted fs-7">Tổng hợp doanh thu, tiến độ tiếp nhận sửa chữa và cảnh báo tồn kho phụ tùng</div>
+        </div>
+        <div class="text-muted fs-7">
+            Hôm nay: <b class="text-dark">@DateTime.Now.ToString("dd/MM/yyyy")</b>
+        </div>
+    </div>
+
+    <!-- 4 THẺ SỐ LIỆU TỔNG QUAN -->
+    <div class="row g-3 mb-4">
+        <!-- Doanh thu hôm nay -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted fs-8 text-uppercase fw-semibold">Doanh thu hôm nay</span>
+                    <div class="avatar-circle bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                    </div>
+                </div>
+                <div class="fw-bold text-dark fs-4">@(Model?.DoanhThuHomNay.ToString("#,##0") ?? "0") <span class="fs-7 text-muted">đ</span></div>
+                <div class="fs-8 text-muted mt-1">Đã chốt thanh toán hôm nay</div>
+            </div>
+        </div>
+
+        <!-- Doanh thu tháng này -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted fs-8 text-uppercase fw-semibold">Doanh thu tháng @DateTime.Now.Month</span>
+                    <div class="avatar-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;">
+                        <i class="bi bi-wallet2 fs-5"></i>
+                    </div>
+                </div>
+                <div class="fw-bold text-dark fs-4">@(Model?.DoanhThuThang.ToString("#,##0") ?? "0") <span class="fs-7 text-muted">đ</span></div>
+                <div class="fs-8 text-muted mt-1">Tháng @DateTime.Now.Month/@DateTime.Now.Year</div>
+            </div>
+        </div>
+
+        <!-- Số xe đang sửa & chờ sửa -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted fs-8 text-uppercase fw-semibold">Xe đang tại xưởng</span>
+                    <div class="avatar-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;">
+                        <i class="bi bi-tools fs-5"></i>
+                    </div>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <div class="fw-bold text-dark fs-4">@((Model?.SoXeDangSua ?? 0) + (Model?.SoXeChoSua ?? 0))</div>
+                    <div class="fs-8 text-muted">(Đang sửa: <b class="text-warning">@(Model?.SoXeDangSua ?? 0)</b>, Chờ: <b class="text-primary">@(Model?.SoXeChoSua ?? 0)</b>)</div>
+                </div>
+                <div class="fs-8 text-muted mt-1">Chờ thanh toán: <b class="text-purple">@(Model?.SoXeChoThanhToan ?? 0)</b> xe</div>
+            </div>
+        </div>
+
+        <!-- Số xe hoàn tất hôm nay -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-xs rounded-4 p-3 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted fs-8 text-uppercase fw-semibold">Xe hoàn thành hôm nay</span>
+                    <div class="avatar-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 38px; height: 38px; border-radius: 10px;">
+                        <i class="bi bi-check2-all fs-5"></i>
+                    </div>
+                </div>
+                <div class="fw-bold text-dark fs-4">@(Model?.SoXeHoanThanhHomNay ?? 0) <span class="fs-7 text-muted">xe</span></div>
+                <div class="fs-8 text-success mt-1"><i class="bi bi-check-circle me-1"></i>Đã giao xe cho khách</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2 BẢNG CHI TIẾT: CẢNH BÁO TỒN KHO & LỊCH SỬ SỬA CHỮA GẦN ĐÂY -->
+    <div class="row g-4">
+        <!-- Cảnh báo tồn kho phụ tùng -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-xs rounded-4 bg-white overflow-hidden h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-triangle text-danger"></i>
+                        Top phụ tùng sắp hết hàng (Cảnh báo tồn kho)
+                    </div>
+                    <span class="badge bg-danger-subtle text-danger rounded-pill">@(Model?.PhuTungCanhBao?.Count ?? 0) mặt hàng</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 fs-7">
+                        <thead class="bg-light fs-8 text-uppercase">
+                            <tr>
+                                <th class="ps-3 py-2">Mã PT</th>
+                                <th class="py-2">Tên phụ tùng</th>
+                                <th class="text-center py-2">Tồn kho</th>
+                                <th class="text-center py-2">Tối thiểu</th>
+                                <th class="text-end pe-3 py-2">Thiếu hụt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model?.PhuTungCanhBao != null && Model.PhuTungCanhBao.Any())
+                            {
+                                foreach (var pt in Model.PhuTungCanhBao)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-primary">@pt.MaPT</td>
+                                        <td>
+                                            <div class="fw-semibold text-dark">@pt.TenPT</div>
+                                            <div class="text-muted fs-8">@(pt.DongXeTuongThich ?? "Đa năng")</div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge bg-danger text-white rounded-pill px-2">@pt.SoLuongTon @pt.DonViTinh</span>
+                                        </td>
+                                        <td class="text-center text-muted">@pt.TonToiThieu</td>
+                                        <td class="text-end pe-3 fw-bold text-danger">
+                                            -@pt.SoLuongThieuHut
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+                                        Kho phụ tùng đảm bảo đầy đủ số lượng tồn tối thiểu!
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phiếu sửa chữa hoàn thành gần nhất -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-xs rounded-4 bg-white overflow-hidden h-100">
+                <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
+                    <div class="fw-bold text-dark d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        Phiếu sửa chữa hoàn tất thanh toán gần đây
+                    </div>
+                    <a href="/" class="btn btn-sm btn-link text-primary text-decoration-none p-0 fs-8">Về bảng điều phối</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 fs-7">
+                        <thead class="bg-light fs-8 text-uppercase">
+                            <tr>
+                                <th class="ps-3 py-2">Mã phiếu</th>
+                                <th class="py-2">Biển số</th>
+                                <th class="py-2">Khách hàng</th>
+                                <th class="py-2">Thời gian xong</th>
+                                <th class="text-end pe-3 py-2">Tổng tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model?.PhieuSuaMoiNhat != null && Model.PhieuSuaMoiNhat.Any())
+                            {
+                                foreach (var p in Model.PhieuSuaMoiNhat)
+                                {
+                                    <tr>
+                                        <td class="ps-3 fw-bold text-primary">#@p.MaPhieu</td>
+                                        <td>
+                                            <span class="badge bg-light text-primary border border-primary-subtle px-2 py-1 rounded-2">
+                                                @p.BienSo
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold text-dark">@p.HoTen</div>
+                                        </td>
+                                        <td class="text-muted fs-8">
+                                            @(p.NgayHoanThanh != null ? ((DateTime)p.NgayHoanThanh).ToString("dd/MM/yyyy HH:mm") : "—")
+                                        </td>
+                                        <td class="text-end pe-3 fw-bold text-success">
+                                            @(((decimal)p.TongTien).ToString("#,##0")) đ
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">
+                                        Chưa có phiếu hoàn thành nào gần đây
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

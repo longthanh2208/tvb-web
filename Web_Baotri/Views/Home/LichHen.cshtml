@@ -1,0 +1,236 @@
+@model IEnumerable<Web_Baotri.Models.LichHenItemViewModel>
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn từ Mobile App";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header Title & Action -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-calendar3 text-primary"></i>
+                Danh sách lịch hẹn từ Mobile App
+            </h4>
+            <div class="text-muted fs-7">Tiếp nhận các đơn đặt lịch hẹn bảo dưỡng, sửa chữa gửi từ ứng dụng di động</div>
+        </div>
+        <a href="/" class="btn btn-outline-primary d-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow-sm fw-semibold">
+            <i class="bi bi-kanban fs-6"></i>
+            <span>Về Bàn tiếp nhận</span>
+        </a>
+    </div>
+
+    <!-- Stats & Notice Banner -->
+    <div class="card border-0 shadow-xs rounded-4 p-3 mb-4 bg-white">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="avatar-circle bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; border-radius: 12px;">
+                    <i class="bi bi-bell-fill fs-5"></i>
+                </div>
+                <div>
+                    <div class="fw-bold text-dark fs-6">
+                        Có <span class="text-danger fw-bold" id="lblCountLichHen">@(Model?.Count() ?? 0)</span> đơn đặt lịch đang chờ tiếp nhận vào xưởng
+                    </div>
+                    <div class="text-muted fs-8">Bấm nút "Xác nhận tiếp nhận" để chuyển phiếu sang cột Chờ sửa (ChoSua) trên Bàn tiếp nhận.</div>
+                </div>
+            </div>
+            <div>
+                <button class="btn btn-sm btn-light border text-secondary rounded-3 px-3 py-1.5" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Làm mới danh sách
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table of Appointments -->
+    <div class="card border-0 shadow-xs rounded-4 bg-white overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tableLichHen">
+                <thead class="bg-light text-secondary fs-8 text-uppercase border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3" style="width: 110px;">Mã phiếu</th>
+                        <th class="py-3" style="width: 180px;">Biển số & Dòng xe</th>
+                        <th class="py-3" style="width: 200px;">Khách hàng</th>
+                        <th class="py-3" style="width: 150px;">Thời gian đặt</th>
+                        <th class="py-3">Ghi chú & Triệu chứng từ App</th>
+                        <th class="py-3" style="width: 150px;">Trạng thái</th>
+                        <th class="text-end pe-4 py-3" style="width: 170px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="fs-7" id="tbodyLichHen">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr id="row-lh-@item.MaPhieu">
+                                <td class="ps-4">
+                                    <span class="badge bg-primary-subtle text-primary fw-bold px-2.5 py-1.5 rounded-2">
+                                        #@item.MaPhieu
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-primary fs-6">@item.BienSo</div>
+                                    <div class="text-muted fs-8">@(string.IsNullOrEmpty(item.DongXe) ? "Xe máy" : item.DongXe)</div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@item.TenKhachHang</div>
+                                    <div>
+                                        <a href="tel:@item.SoDienThoai" class="text-decoration-none text-muted fs-8">
+                                            <i class="bi bi-telephone text-primary me-1"></i>@item.SoDienThoai
+                                        </a>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@item.NgayTiepNhan.ToString("dd/MM/yyyy")</div>
+                                    <div class="text-muted fs-8">@item.NgayTiepNhan.ToString("HH:mm")</div>
+                                </td>
+                                <td>
+                                    <div class="bg-light p-2 rounded-2 text-dark fs-8 border">
+                                        @(string.IsNullOrWhiteSpace(item.GhiChuTinhTrang) ? "Khách không để lại ghi chú" : item.GhiChuTinhTrang)
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                                        <i class="bi bi-phone"></i> Đặt từ Mobile App
+                                    </span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-primary rounded-2 px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs"
+                                            onclick="openTiepNhanModal(@item.MaPhieu, '@item.BienSo', '@item.TenKhachHang', '@item.SoDienThoai', '@(item.DongXe ?? "")', '@(item.GhiChuTinhTrang ?? "")')">
+                                        <i class="bi bi-check2-circle"></i> Tiếp nhận xe
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-calendar-check fs-2 d-block mb-2 text-success"></i>
+                                Hiện tại không có lịch hẹn mới nào cần tiếp nhận
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <!-- Card Footer Phân Trang: 10 dòng / trang -->
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="text-muted fs-7" id="lblPagingInfoLH">
+                Hiển thị 1 - 10 trên tổng @(Model?.Count() ?? 0) lịch hẹn (10 dòng/trang)
+            </div>
+            <nav id="pagingLichHen"></nav>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL TIẾP NHẬN LỊCH HẸN VÀO XƯỞNG -->
+<div class="modal fade" id="modalTiepNhanLichHen" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-box-arrow-in-right text-primary"></i>
+                    Xác nhận tiếp nhận lịch hẹn vào xưởng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formTiepNhanLichHen" onsubmit="doTiepNhanLichHen(event)">
+                    <input type="hidden" id="tnMaPhieu" />
+
+                    <!-- Appointment Summary Banner -->
+                    <div class="bg-light rounded-3 p-3 mb-3 border">
+                        <div class="row g-2 fs-7">
+                            <div class="col-sm-6"><b>Mã phiếu:</b> <span id="tnLblMaPhieu" class="text-primary fw-bold"></span></div>
+                            <div class="col-sm-6"><b>Biển số:</b> <span id="tnLblBienSo" class="text-primary fw-bold"></span></div>
+                            <div class="col-sm-6"><b>Khách hàng:</b> <span id="tnLblTenKhach"></span></div>
+                            <div class="col-sm-6"><b>Số ĐT:</b> <span id="tnLblSDT"></span></div>
+                            <div class="col-12"><b>Dòng xe:</b> <span id="tnLblDongXe"></span></div>
+                            <div class="col-12"><b>Ghi chú từ App:</b> <span id="tnLblGhiChuApp" class="text-muted"></span></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Số ODO lúc nhận xe thực tế (km)</label>
+                        <input type="number" id="tnSoODO" class="form-control rounded-3" placeholder="Nhập ODO thực tế xe lúc vào tiệm..." min="0">
+                        <div class="text-muted fs-8 mt-1">Cập nhật chỉ số ODO mới nhất của xe nếu có</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Ghi chú thêm của Lễ tân / Cố vấn dịch vụ</label>
+                        <textarea id="tnGhiChuThem" class="form-control rounded-3" rows="3" placeholder="Ví dụ: Xe trầy xước nhẹ cánh yếm phải, khách dặn kiểm tra thêm phanh sau..."></textarea>
+                    </div>
+
+                    <div id="tnError" class="alert alert-danger fs-7 py-2 d-none mb-3"></div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2">
+                        <button type="button" class="btn btn-light px-3 rounded-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary px-4 rounded-3 fw-semibold">
+                            <i class="bi bi-check2-all me-1"></i> Chuyển sang Chờ sửa
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let tableLichHenPaging = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        window.tableLichHenPaging = new TablePagination({
+            instanceName: 'tableLichHenPaging',
+            tableId: 'tableLichHen',
+            tbodyId: 'tbodyLichHen',
+            paginationContainerId: 'pagingLichHen',
+            infoLabelId: 'lblPagingInfoLH',
+            pageSize: 10
+        });
+    });
+
+    function openTiepNhanModal(maPhieu, bienSo, tenKhach, sdt, dongXe, ghiChuApp) {
+        document.getElementById('tnMaPhieu').value = maPhieu;
+        document.getElementById('tnLblMaPhieu').innerText = '#' + maPhieu;
+        document.getElementById('tnLblBienSo').innerText = bienSo;
+        document.getElementById('tnLblTenKhach').innerText = tenKhach;
+        document.getElementById('tnLblSDT').innerText = sdt;
+        document.getElementById('tnLblDongXe').innerText = dongXe || 'Xe máy';
+        document.getElementById('tnLblGhiChuApp').innerText = ghiChuApp || 'Không có';
+        document.getElementById('tnSoODO').value = '';
+        document.getElementById('tnGhiChuThem').value = '';
+        document.getElementById('tnError').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('modalTiepNhanLichHen')).show();
+    }
+
+    async function doTiepNhanLichHen(e) {
+        e.preventDefault();
+        const maPhieu = parseInt(document.getElementById('tnMaPhieu').value);
+        const odo = parseInt(document.getElementById('tnSoODO').value) || null;
+        const ghiChu = document.getElementById('tnGhiChuThem').value.trim();
+        const errDiv = document.getElementById('tnError');
+
+        try {
+            const res = await fetch('/Home/TiepNhanLichHen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maPhieu, soODOLucNhan: odo, ghiChuThem: ghiChu })
+            });
+            const data = await res.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalTiepNhanLichHen')).hide();
+                alert('Đã tiếp nhận xe thành công! Phiếu đã chuyển sang Chờ sửa trên Bàn tiếp nhận.');
+                window.location.href = '/';
+            } else {
+                errDiv.innerText = data.message || 'Không thể tiếp nhận!';
+                errDiv.classList.remove('d-none');
+            }
+        } catch {
+            errDiv.innerText = 'Lỗi kết nối máy chủ!';
+            errDiv.classList.remove('d-none');
+        }
+    }
+</script>
+}

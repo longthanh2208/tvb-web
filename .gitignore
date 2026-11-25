@@ -1,0 +1,12 @@
+## Ignore build artifacts
+**/bin/
+**/obj/
+**/.vs/
+**/*.user
+
+## Ignore IDE configs
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln.docstates

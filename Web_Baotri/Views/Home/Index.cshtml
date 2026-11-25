@@ -1,0 +1,596 @@
+@model Web_Baotri.Models.KanbanBoardViewModel
+@{
+    ViewData["Title"] = "Bàn tiếp nhận";
+}
+
+<div class="container-fluid px-2 px-md-3">
+    <div class="row g-4">
+        <!-- LEFT: KANBAN BOARD 3 CỘT (CHỜ SỬA, ĐANG SỬA, CHỜ THANH TOÁN) -->
+        <div class="col-12 col-xl-8 col-lg-8">
+            <div class="row g-3 g-md-4">
+                
+                <!-- CỘT 1: CHỜ SỬA -->
+                <div class="col-12 col-md-4">
+                    <div class="kanban-column-wrapper" id="wrapChoSua" 
+                         ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event, 'ChoSua')">
+                        <div class="kanban-header">
+                            <div class="kanban-title">
+                                <span class="status-dot blue"></span>
+                                <span>Chờ sửa</span>
+                                <span class="kanban-badge blue" id="badgeCountChoSua">@Model.ChoSua.Count</span>
+                            </div>
+                            <button class="btn btn-sm btn-icon border-0 text-muted p-0" type="button" title="Tùy chọn">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </div>
+
+                        <div class="kanban-cards-list" id="colChoSua">
+                            @if (Model.ChoSua.Count == 0)
+                            {
+                                <div class="empty-column-placeholder text-center py-4">
+                                    <i class="bi bi-inbox text-muted opacity-50 fs-2 d-block mb-1"></i>
+                                    <span class="text-muted fs-8">Chưa có xe chờ sửa</span>
+                                </div>
+                            }
+                            @foreach (var item in Model.ChoSua)
+                            {
+                                <div class="kanban-card" draggable="true"
+                                     ondragstart="onCardDragStart(event, @item.MaPhieu, '@item.TrangThai')" ondragend="onCardDragEnd(event)"
+                                     onclick="openPhieuModal(@item.MaPhieu, '@item.BienSo', '@item.TenKhachHang', '@item.SoDienThoai', '@item.DongXe', '@item.GhiChuTinhTrang', '@item.TrangThai', '@item.TenKTV', @item.TongTien, @item.SoODOLucNhan)">
+                                    <div class="card-inner">
+                                        <div class="moto-icon-box blue">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m6 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m-6-1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m6 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                                <path d="M4.5 9h5a.5.5 0 0 0 0-1h-5a.5.5 0 0 0 0 1m1.5-4a.5.5 0 0 0 0 1h2.5a.5.5 0 0 0 0-1zm1.5-1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="card-info">
+                                            <div class="card-plate">@item.BienSo</div>
+                                            <div class="card-customer">@item.TenKhachHang</div>
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mt-1">
+                                                <span class="card-status-badge blue">Mới tiếp nhận</span>
+                                                @if (item.TongTien > 0)
+                                                {
+                                                    <span class="fs-8 fw-bold text-primary">@item.TongTien.ToString("N0") đ</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <button class="btn btn-add-vehicle" type="button" onclick="focusBienSoInput()">
+                            <i class="bi bi-plus-lg"></i> Thêm xe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CỘT 2: ĐANG SỬA -->
+                <div class="col-12 col-md-4">
+                    <div class="kanban-column-wrapper" id="wrapDangSua"
+                         ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event, 'DangSua')">
+                        <div class="kanban-header">
+                            <div class="kanban-title">
+                                <span class="status-dot orange"></span>
+                                <span>Đang sửa</span>
+                                <span class="kanban-badge orange" id="badgeCountDangSua">@Model.DangSua.Count</span>
+                            </div>
+                            <button class="btn btn-sm btn-icon border-0 text-muted p-0" type="button" title="Tùy chọn">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </div>
+
+                        <div class="kanban-cards-list" id="colDangSua">
+                            @if (Model.DangSua.Count == 0)
+                            {
+                                <div class="empty-column-placeholder text-center py-4">
+                                    <i class="bi bi-inbox text-muted opacity-50 fs-2 d-block mb-1"></i>
+                                    <span class="text-muted fs-8">Chưa có xe đang sửa</span>
+                                </div>
+                            }
+                            @foreach (var item in Model.DangSua)
+                            {
+                                <div class="kanban-card" draggable="true"
+                                     ondragstart="onCardDragStart(event, @item.MaPhieu, '@item.TrangThai')" ondragend="onCardDragEnd(event)"
+                                     onclick="openPhieuModal(@item.MaPhieu, '@item.BienSo', '@item.TenKhachHang', '@item.SoDienThoai', '@item.DongXe', '@item.GhiChuTinhTrang', '@item.TrangThai', '@item.TenKTV', @item.TongTien, @item.SoODOLucNhan)">
+                                    <div class="card-inner">
+                                        <div class="moto-icon-box orange">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m6 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m-6-1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m6 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                                <path d="M4.5 9h5a.5.5 0 0 0 0-1h-5a.5.5 0 0 0 0 1m1.5-4a.5.5 0 0 0 0 1h2.5a.5.5 0 0 0 0-1zm1.5-1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="card-info">
+                                            <div class="card-plate">@item.BienSo</div>
+                                            <div class="card-customer">@item.TenKhachHang</div>
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mt-1">
+                                                <span class="card-status-badge orange">Đang sửa chữa</span>
+                                                @if (item.TongTien > 0)
+                                                {
+                                                    <span class="fs-8 fw-bold text-primary">@item.TongTien.ToString("N0") đ</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(item.TenKTV))
+                                            {
+                                                <div class="fs-8 text-secondary mt-1">
+                                                    <i class="bi bi-wrench-adjustable me-1 text-warning"></i>@item.TenKTV
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <button class="btn btn-add-vehicle" type="button" onclick="focusBienSoInput()">
+                            <i class="bi bi-plus-lg"></i> Thêm xe
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CỘT 3: CHỜ THANH TOÁN -->
+                <div class="col-12 col-md-4">
+                    <div class="kanban-column-wrapper" id="wrapChoThanhToan"
+                         ondragover="onColDragOver(event)" ondragleave="onColDragLeave(event)" ondrop="onColDrop(event, 'ChoThanhToan')">
+                        <div class="kanban-header">
+                            <div class="kanban-title">
+                                <span class="status-dot purple"></span>
+                                <span>Chờ thanh toán</span>
+                                <span class="kanban-badge purple" id="badgeCountChoThanhToan">@Model.ChoThanhToan.Count</span>
+                            </div>
+                            <button class="btn btn-sm btn-icon border-0 text-muted p-0" type="button" title="Tùy chọn">
+                                <i class="bi bi-three-dots"></i>
+                            </button>
+                        </div>
+
+                        <div class="kanban-cards-list" id="colChoThanhToan">
+                            @if (Model.ChoThanhToan.Count == 0)
+                            {
+                                <div class="empty-column-placeholder text-center py-4">
+                                    <i class="bi bi-inbox text-muted opacity-50 fs-2 d-block mb-1"></i>
+                                    <span class="text-muted fs-8">Chưa có xe chờ thanh toán</span>
+                                </div>
+                            }
+                            @foreach (var item in Model.ChoThanhToan)
+                            {
+                                <div class="kanban-card" draggable="true"
+                                     ondragstart="onCardDragStart(event, @item.MaPhieu, '@item.TrangThai')" ondragend="onCardDragEnd(event)"
+                                     onclick="openPhieuModal(@item.MaPhieu, '@item.BienSo', '@item.TenKhachHang', '@item.SoDienThoai', '@item.DongXe', '@item.GhiChuTinhTrang', '@item.TrangThai', '@item.TenKTV', @item.TongTien, @item.SoODOLucNhan)">
+                                    <div class="card-inner">
+                                        <div class="moto-icon-box purple">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="currentColor" viewBox="0 0 16 16">
+                                                <path d="M4 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m6 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m-6-1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m6 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                                                <path d="M4.5 9h5a.5.5 0 0 0 0-1h-5a.5.5 0 0 0 0 1m1.5-4a.5.5 0 0 0 0 1h2.5a.5.5 0 0 0 0-1zm1.5-1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                                            </svg>
+                                        </div>
+                                        <div class="card-info">
+                                            <div class="card-plate">@item.BienSo</div>
+                                            <div class="card-customer">@item.TenKhachHang</div>
+                                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-1 mt-1">
+                                                <span class="card-status-badge purple">Chờ thanh toán</span>
+                                                @if (item.TongTien > 0)
+                                                {
+                                                    <span class="fs-8 fw-bold text-primary">@item.TongTien.ToString("N0") đ</span>
+                                                }
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(item.TenKTV))
+                                            {
+                                                <div class="fs-8 text-secondary mt-1">
+                                                    <i class="bi bi-wrench-adjustable me-1 text-warning"></i>@item.TenKTV
+                                                </div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <button class="btn btn-add-vehicle" type="button" onclick="focusBienSoInput()">
+                            <i class="bi bi-plus-lg"></i> Thêm xe
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RIGHT: PANEL TIẾP NHẬN XE MỚI -->
+        <div class="col-12 col-xl-4 col-lg-4">
+            <div class="reception-panel" style="position: sticky; top: 80px; z-index: 10;">
+                <div class="reception-header">
+                    <span class="icon-circle-add">
+                        <i class="bi bi-plus-lg"></i>
+                    </span>
+                    <h5 class="reception-title">Tiếp nhận xe mới</h5>
+                </div>
+
+                <form id="formTiepNhan" onsubmit="event.preventDefault(); submitTiepNhanXe();">
+                    <!-- Biển số * -->
+                    <div class="mb-3">
+                        <label class="form-label-custom">
+                            Biển số <span class="required-star">*</span>
+                        </label>
+                        <div class="input-with-button">
+                            <input type="text" id="txtBienSo" class="form-control form-control-custom text-uppercase" 
+                                   placeholder="Nhập biển số xe (ví dụ: 60B1-123.45)" maxlength="15" required autocomplete="off">
+                            <button type="button" class="btn-input-search" onclick="traCuuBienSoClick()" title="Tra cứu biển số">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                        <div id="valBienSo" class="text-danger fs-8 mt-1 d-none"></div>
+                        <small id="hintTraCuu" class="text-muted fs-8 d-block mt-1"></small>
+                    </div>
+
+                    <!-- Tên khách * -->
+                    <div class="mb-3">
+                        <label class="form-label-custom">
+                            Tên khách <span class="required-star">*</span>
+                        </label>
+                        <input type="text" id="txtTenKhach" class="form-control form-control-custom" 
+                               placeholder="Nhập tên khách hàng" maxlength="100" required autocomplete="off">
+                        <div id="valTenKhach" class="text-danger fs-8 mt-1 d-none"></div>
+                    </div>
+
+                    <!-- Số điện thoại * -->
+                    <div class="mb-3">
+                        <label class="form-label-custom">
+                            Số điện thoại <span class="required-star">*</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <i class="bi bi-phone input-icon-left"></i>
+                            <input type="tel" id="txtSoDienThoai" class="form-control form-control-custom" 
+                                   placeholder="Nhập số điện thoại (10 chữ số)" maxlength="10" inputmode="numeric" required autocomplete="off">
+                        </div>
+                        <div id="valSoDienThoai" class="text-danger fs-8 mt-1 d-none"></div>
+                    </div>
+
+                    <!-- Dòng xe & Số ODO -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <label class="form-label-custom">Dòng xe</label>
+                            <input type="text" id="txtDongXe" class="form-control form-control-custom" 
+                                   placeholder="Ví dụ: Honda AirBlade" maxlength="50" autocomplete="off">
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label-custom">Số ODO (km)</label>
+                            <input type="number" id="txtSoODO" class="form-control form-control-custom" 
+                                   placeholder="0" min="0" autocomplete="off">
+                        </div>
+                    </div>
+
+                    <!-- Ghi chú tình trạng -->
+                    <div class="mb-3">
+                        <label class="form-label-custom">Ghi chú tình trạng</label>
+                        <div class="textarea-wrapper">
+                            <textarea id="txtGhiChu" class="form-control form-control-custom" rows="2" 
+                                      maxlength="500" placeholder="Mô tả tình trạng xe, triệu chứng, yêu cầu..." 
+                                      oninput="updateCharCounter(this)"></textarea>
+                            <span class="char-counter" id="lblCharCount">0/500</span>
+                        </div>
+                    </div>
+
+                    <!-- CHỌN DỊCH VỤ & PHỤ TÙNG CẦN THAY (TỰ ĐỘNG TÍNH TỔNG TẠM TÍNH) -->
+                    <div class="mb-4 border rounded-3 p-2 bg-light-subtle">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label-custom mb-0 fw-bold fs-7">
+                                <i class="bi bi-tools text-primary me-1"></i>Hạng mục dịch vụ & phụ tùng
+                            </label>
+                            <span class="badge bg-primary rounded-pill px-2" id="lblCountItems">0 mục</span>
+                        </div>
+                        
+                        <div class="row g-1 mb-2">
+                            <div class="col-4">
+                                <select id="selLoaiMuc" class="form-select form-select-sm fs-8" onchange="onLoaiMucChange()">
+                                    <option value="DichVu">Dịch vụ</option>
+                                    <option value="PhuTung">Phụ tùng</option>
+                                </select>
+                            </div>
+                            <div class="col-8">
+                                <select id="selHangMuc" class="form-select form-select-sm fs-8">
+                                    <option value="">-- Chọn dịch vụ --</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="d-flex align-items-center gap-1" style="width: 110px;">
+                                <span class="fs-8 text-muted">SL:</span>
+                                <input type="number" id="numSoLuong" class="form-control form-control-sm text-center" value="1" min="1" max="99">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary flex-grow-1 fs-8" onclick="addSelectedHangMuc()">
+                                <i class="bi bi-plus-circle me-1"></i>Thêm vào phiếu
+                            </button>
+                        </div>
+
+                        <!-- Danh sách các mục đã chọn -->
+                        <div class="selected-items-box mb-2" id="selectedItemsContainer" style="max-height: 130px; overflow-y: auto;">
+                            <div class="text-muted text-center py-2 fs-8 fst-italic" id="emptyItemsNotice">Chưa chọn dịch vụ/phụ tùng nào</div>
+                            <ul class="list-group list-group-flush fs-8 d-none" id="listSelectedItems"></ul>
+                        </div>
+
+                        <!-- Tổng tiền tạm tính -->
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                            <span class="text-secondary fs-8 fw-semibold">Tổng tạm tính:</span>
+                            <span class="fs-6 fw-bold text-primary" id="lblTongTamTinh">0 đ</span>
+                        </div>
+                    </div>
+
+                    <!-- Nút thao tác -->
+                    <button type="submit" class="btn-receive-car" id="btnSubmitTiepNhan">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4 11a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m6 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5m-6-1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m6 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                            <path d="M4.5 9h5a.5.5 0 0 0 0-1h-5a.5.5 0 0 0 0 1m1.5-4a.5.5 0 0 0 0 1h2.5a.5.5 0 0 0 0-1zm1.5-1.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5"/>
+                        </svg>
+                        <span>Tiếp nhận xe</span>
+                    </button>
+
+                    <button type="button" class="btn-reset-form" onclick="resetFormTiepNhan()">
+                        <i class="bi bi-arrow-repeat"></i>
+                        <span>Nhập lại</span>
+                    </button>
+                </form>
+
+                <div class="reception-footer-notice">
+                    <i class="bi bi-shield-check fs-6 text-primary"></i>
+                    <span>Tạo phiếu sửa chữa mặc định 'ChoSua' và lưu vào bảng công việc.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CHI TIẾT PHIẾU, PHÂN CÔNG KTV & THANH TOÁN -->
+<div class="modal fade" id="modalPhieuDetail" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <span class="badge bg-primary-subtle text-primary mb-1" id="mDetailTrangThaiBadge">Mới tiếp nhận</span>
+                    <h5 class="modal-title fw-bold text-dark" id="mDetailTitle">Phiếu sửa chữa</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="mDetailMaPhieu">
+                
+                <!-- Thông tin xe & khách -->
+                <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                    <div class="row g-2 fs-7">
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">Biển số:</span>
+                            <strong class="text-primary fs-6" id="mDetailBienSo">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">Dòng xe:</span>
+                            <strong id="mDetailDongXe">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">Số ODO lúc nhận:</span>
+                            <strong id="mDetailODO">-</strong>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">Khách hàng:</span>
+                            <span class="fw-semibold" id="mDetailTenKhach">-</span>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">Điện thoại:</span>
+                            <span class="fw-semibold" id="mDetailSDT">-</span>
+                        </div>
+                        <div class="col-md-4 col-6">
+                            <span class="text-muted d-block fs-8">KTV Phụ trách:</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis fs-8" id="mDetailKTVText">Chưa giao thợ</span>
+                        </div>
+                        <div class="col-12 mt-2">
+                            <span class="text-muted d-block fs-8">Ghi chú tình trạng:</span>
+                            <div class="p-2 bg-white rounded border fs-8 text-secondary" id="mDetailGhiChu">Không có ghi chú</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng chi tiết hạng mục dịch vụ & phụ tùng trong phiếu -->
+                <div class="mb-3">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <label class="form-label text-muted fs-7 mb-0 fw-bold">Chi tiết hạng mục dịch vụ & phụ tùng:</label>
+                        <small class="text-primary fs-8" id="lblItemEditHint">
+                            <i class="bi bi-pencil-square me-1"></i>Có thể sửa số lượng hoặc xóa/thêm hạng mục
+                        </small>
+                    </div>
+                    <div class="table-responsive border rounded-3 mb-2" style="max-height: 200px; overflow-y: auto;">
+                        <table class="table table-sm table-hover mb-0 fs-8 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 35px;">STT</th>
+                                    <th style="width: 75px;">Loại</th>
+                                    <th>Tên hạng mục</th>
+                                    <th style="width: 50px;" class="text-center">ĐVT</th>
+                                    <th style="width: 95px;" class="text-center">Số lượng</th>
+                                    <th style="width: 85px;" class="text-end">Đơn giá</th>
+                                    <th style="width: 95px;" class="text-end">Thành tiền</th>
+                                    <th style="width: 45px;" class="text-center" id="thActionHeader">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblDetailPhieuItems">
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted py-2">Đang tải chi tiết...</td>
+                                </tr>
+                            </tbody>
+                            <tfoot class="table-light border-top">
+                                <tr>
+                                    <td colspan="6" class="text-end fw-bold">Tổng cộng:</td>
+                                    <td class="text-end fw-bold text-primary fs-7" id="lblDetailTongTien">0 đ</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                    <!-- KHU VỰC THÊM HẠNG MỤC PHÁT SINH / BỔ SUNG TRONG PHIẾU (ĐANG SỬA & CHỜ THANH TOÁN) -->
+                    <div class="p-2 border rounded-3 bg-light-subtle" id="boxAddHangMucToPhieu">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fs-8 fw-semibold text-secondary">
+                                <i class="bi bi-plus-circle-fill text-primary me-1"></i>Thêm dịch vụ / phụ tùng bổ sung:
+                            </span>
+                        </div>
+                        <div class="row g-1 align-items-center">
+                            <div class="col-md-3 col-4">
+                                <select id="selModalLoaiMuc" class="form-select form-select-sm fs-8" onchange="onModalLoaiMucChange()">
+                                    <option value="DichVu">Dịch vụ</option>
+                                    <option value="PhuTung">Phụ tùng</option>
+                                </select>
+                            </div>
+                            <div class="col-md-5 col-8">
+                                <select id="selModalHangMuc" class="form-select form-select-sm fs-8">
+                                    <option value="">-- Chọn dịch vụ --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2 col-4">
+                                <input type="number" id="numModalSoLuong" class="form-control form-control-sm text-center fs-8" value="1" min="1" max="99" placeholder="SL">
+                            </div>
+                            <div class="col-md-2 col-8">
+                                <button type="button" class="btn btn-sm btn-primary w-100 fs-8" onclick="submitThemHangMucToPhieu()">
+                                    <i class="bi bi-plus-lg me-1"></i>Thêm
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KHU VỰC PHÂN CÔNG KỸ THUẬT VIÊN (KTV) -->
+                <div class="card border rounded-3 p-3 mb-3 bg-light-subtle" id="sectionPhanCongKTV">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <label class="form-label mb-0 fw-bold fs-7 text-dark">
+                            <i class="bi bi-person-gear text-warning me-1"></i>Phân công Kỹ thuật viên (Thợ)
+                        </label>
+                        <small class="text-muted fs-8">Gán thợ và chuyển trạng thái sang 'Đang sửa'</small>
+                    </div>
+                    <div class="input-group input-group-sm">
+                        <select id="selAssignKTV" class="form-select fs-8">
+                            <option value="">-- Chọn kỹ thuật viên --</option>
+                        </select>
+                        <button class="btn btn-warning fw-semibold px-3" type="button" onclick="submitPhanCongKTV()">
+                            <i class="bi bi-check-circle me-1"></i>Giao việc & Bắt đầu sửa
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CHUYỂN TRẠNG THÁI & THANH TOÁN -->
+                <div class="mb-2">
+                    <label class="form-label text-muted fs-7 mb-1">Chuyển trạng thái quy trình xưởng:</label>
+                    <div class="d-flex flex-wrap gap-2 align-items-center" id="actionStatusButtons">
+                        <button type="button" id="btnStatusChoSua" class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="chuyenTrangThaiCurrent('ChoSua')">
+                            ● Chờ sửa
+                        </button>
+                        <button type="button" id="btnStatusDangSua" class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="chuyenTrangThaiCurrent('DangSua')">
+                            ● Đang sửa
+                        </button>
+                        <button type="button" id="btnStatusChoThanhToan" class="btn btn-sm btn-outline-info rounded-pill px-3" onclick="chuyenTrangThaiCurrent('ChoThanhToan')">
+                            ● Chờ thanh toán
+                        </button>
+                        
+                        <!-- Nút Chốt hóa đơn thanh toán (nổi bật khi ở ChoThanhToan) -->
+                        <button type="button" id="btnChotThanhToanModal" class="btn btn-sm btn-success rounded-pill px-3 fw-bold" onclick="submitChotHoaDonCurrent()">
+                            <i class="bi bi-cash-stack me-1"></i>Chốt hóa đơn & Thanh toán
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 d-flex justify-content-between">
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="openInHoaDonModalCurrent()">
+                    <i class="bi bi-printer me-1"></i>Xem / In hóa đơn
+                </button>
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: IN / XEM HÓA ĐƠN THANH TOÁN (HÓA ĐƠN HOÀN CHỈNH) -->
+<div class="modal fade" id="modalInHoaDon" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0 no-print">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-receipt text-primary me-2"></i>Hóa đơn dịch vụ & phụ tùng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4" id="invoicePrintArea">
+                <!-- Header hóa đơn -->
+                <div class="text-center pb-3 border-bottom mb-3">
+                    <h5 class="fw-bold text-primary mb-1" id="invTenTrungTam">TRUNG TÂM BẢO DƯỠNG & SỬA CHỮA XE MÁY TVB</h5>
+                    <div class="text-muted fs-8" id="invDiaChiTrungTam">Đà Lạt, Lâm Đồng - Hotline: 0901.234.567</div>
+                    <div class="fs-4 fw-bold text-dark mt-2 tracking-wide">HÓA ĐƠN THANH TOÁN</div>
+                    <div class="text-secondary fs-8">Mã số: <strong id="invSoHoaDon">#0</strong> | Ngày: <span id="invNgayThanhToan">--</span></div>
+                </div>
+
+                <!-- Thông tin khách hàng & xe -->
+                <div class="row g-2 fs-8 mb-3 bg-light-subtle p-3 rounded-3 border">
+                    <div class="col-6">
+                        <span class="text-muted">Khách hàng:</span> <strong id="invTenKhach">-</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">Điện thoại:</span> <span id="invSDT">-</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">Biển số xe:</span> <strong class="text-primary" id="invBienSo">-</strong>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">Dòng xe:</span> <span id="invDongXe">-</span>
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">Số ODO lúc nhận:</span> <span id="invODO">-</span> km
+                    </div>
+                    <div class="col-6">
+                        <span class="text-muted">Kỹ thuật viên:</span> <strong id="invKTV">-</strong>
+                    </div>
+                    <div class="col-12" id="invRowGhiChu">
+                        <span class="text-muted">Ghi chú:</span> <span id="invGhiChu">-</span>
+                    </div>
+                </div>
+
+                <!-- Bảng chi tiết hóa đơn -->
+                <div class="table-responsive mb-3">
+                    <table class="table table-bordered table-sm fs-8 align-middle mb-0">
+                        <thead class="table-light text-center">
+                            <tr>
+                                <th style="width: 40px;">STT</th>
+                                <th>Tên dịch vụ / Phụ tùng</th>
+                                <th style="width: 60px;">ĐVT</th>
+                                <th style="width: 60px;">SL</th>
+                                <th class="text-end" style="width: 100px;">Đơn giá</th>
+                                <th class="text-end" style="width: 120px;">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody id="invTbodyItems">
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="5" class="text-end fw-bold fs-7">TỔNG CỘNG THANH TOÁN:</td>
+                                <td class="text-end fw-bold fs-6 text-primary" id="invTongTien">0 đ</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Lời cảm ơn và chữ ký -->
+                <div class="row text-center fs-8 pt-3 mt-3 border-top">
+                    <div class="col-6">
+                        <div class="fw-semibold">Khách hàng</div>
+                        <div class="text-muted fst-italic mt-4">(Ký, ghi rõ họ tên)</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="fw-semibold">Đại diện trung tâm TVB</div>
+                        <div class="text-muted fst-italic mt-4">(Ký, đóng dấu)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 pt-0 no-print">
+                <button type="button" class="btn btn-primary rounded-pill px-4" onclick="window.print()">
+                    <i class="bi bi-printer me-1"></i>In hóa đơn
+                </button>
+                <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>

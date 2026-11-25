@@ -1,0 +1,299 @@
+@model IEnumerable<Web_Baotri.Models.DichVuModel>
+@{
+    ViewData["Title"] = "Quản lý dịch vụ & Công thợ";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header Title & Action -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-wrench-adjustable text-primary"></i>
+                Quản lý dịch vụ & Tiền công thợ
+            </h4>
+            <div class="text-muted fs-7">Danh mục các gói dịch vụ bảo trì, sửa chữa xe máy tại xưởng</div>
+        </div>
+        <button class="btn btn-primary d-flex align-items-center gap-2 px-3 py-2 rounded-3 shadow-sm fw-semibold" onclick="openAddDichVuModal()">
+            <i class="bi bi-plus-lg fs-6"></i>
+            <span>Thêm dịch vụ mới</span>
+        </button>
+    </div>
+
+    <!-- Filter & Search Bar -->
+    <div class="card border-0 shadow-xs rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted rounded-start-3">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="txtSearchDV" class="form-control bg-light border-start-0 rounded-end-3" 
+                           placeholder="Tìm theo mã dịch vụ hoặc tên dịch vụ..." onkeyup="filterDichVu()">
+                </div>
+            </div>
+            <div class="col-md-7 text-md-end text-muted fs-7">
+                Tổng số dịch vụ: <span class="fw-bold text-primary" id="lblTotalDV">@(Model?.Count() ?? 0)</span> gói dịch vụ
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table Card -->
+    <div class="card border-0 shadow-xs rounded-4 bg-white overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tableDichVu">
+                <thead class="bg-light text-secondary fs-8 text-uppercase border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3" style="width: 120px;">Mã DV</th>
+                        <th class="py-3">Tên dịch vụ</th>
+                        <th class="py-3" style="width: 180px;">Đơn giá công</th>
+                        <th class="py-3">Mô tả chi tiết</th>
+                        <th class="text-end pe-4 py-3" style="width: 140px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="fs-7" id="tbodyDichVu">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            <tr id="row-dv-@item.MaDV">
+                                <td class="ps-4">
+                                    <span class="badge bg-primary-subtle text-primary fw-semibold px-2.5 py-1.5 rounded-2">
+                                        @item.MaDV
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@item.TenDV</div>
+                                </td>
+                                <td>
+                                    <span class="fw-bold text-success fs-6">@item.DonGia.ToString("#,##0") đ</span>
+                                </td>
+                                <td>
+                                    <span class="text-muted">@(string.IsNullOrWhiteSpace(item.MoTa) ? "—" : item.MoTa)</span>
+                                </td>
+                                <td class="text-end pe-4">
+                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                        <button class="btn btn-sm btn-light border text-primary rounded-2 px-2 py-1" 
+                                                title="Sửa dịch vụ"
+                                                onclick="openEditDichVuModal('@item.MaDV', '@item.TenDV', @item.DonGia, '@(item.MoTa ?? "")')">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-light border text-danger rounded-2 px-2 py-1" 
+                                                title="Xóa dịch vụ"
+                                                onclick="confirmDeleteDichVu('@item.MaDV', '@item.TenDV')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                                Chưa có dịch vụ nào trong hệ thống
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <!-- Card Footer Phân Trang: 10 dòng / trang -->
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="text-muted fs-7" id="lblPagingInfoDV">
+                Hiển thị 1 - 10 trên tổng @(Model?.Count() ?? 0) dịch vụ (10 dòng/trang)
+            </div>
+            <nav id="pagingDichVu"></nav>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL THÊM / SỬA DỊCH VỤ -->
+<div class="modal fade" id="modalDichVu" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="modalDichVuTitle">
+                    <i class="bi bi-wrench-adjustable text-primary"></i>
+                    Thêm dịch vụ mới
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formDichVu" onsubmit="saveDichVu(event)">
+                    <input type="hidden" id="dvActionType" value="add" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Mã dịch vụ <span class="text-danger">*</span></label>
+                        <input type="text" id="txtMaDV" class="form-control rounded-3" placeholder="Ví dụ: DV006" required maxlength="20">
+                        <div class="text-muted fs-8 mt-1">Mã duy nhất viết liền không dấu (VD: DV001, BD001)</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Tên gói dịch vụ <span class="text-danger">*</span></label>
+                        <input type="text" id="txtTenDV" class="form-control rounded-3" placeholder="Ví dụ: Vệ sinh kim phun điện tử Fi" required maxlength="150">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Đơn giá tiền công (VNĐ) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" id="txtDonGia" class="form-control rounded-start-3" placeholder="50000" min="0" step="1000" required>
+                            <span class="input-group-text bg-light rounded-end-3">VNĐ</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Mô tả chi tiết</label>
+                        <textarea id="txtMoTa" class="form-control rounded-3" rows="3" placeholder="Ghi chú quy trình, điều kiện bảo hành hoặc nội dung gói..."></textarea>
+                    </div>
+
+                    <div id="dvModalError" class="alert alert-danger fs-7 py-2 d-none mb-3"></div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2">
+                        <button type="button" class="btn btn-light px-3 rounded-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary px-4 rounded-3 fw-semibold" id="btnSaveDV">
+                            <i class="bi bi-check2-circle me-1"></i> Lưu dịch vụ
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL XÁC NHẬN XÓA -->
+<div class="modal fade" id="modalDeleteDV" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow rounded-4 text-center p-3">
+            <div class="modal-body p-3">
+                <div class="avatar-circle bg-danger-subtle text-danger mx-auto mb-3" style="width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-exclamation-triangle fs-3"></i>
+                </div>
+                <h6 class="fw-bold text-dark mb-2">Xác nhận xóa dịch vụ?</h6>
+                <p class="text-muted fs-8 mb-4">Bạn có chắc chắn muốn xóa dịch vụ <b id="delDVName"></b> (<span id="delDVCode"></span>)? Thao tác này không thể hoàn tác.</p>
+                <div class="d-flex justify-content-center gap-2">
+                    <button type="button" class="btn btn-light px-3 rounded-3 fs-7" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-danger px-3 rounded-3 fs-7 fw-semibold" onclick="doDeleteDichVu()">Xác nhận xóa</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let currentDeleteMaDV = '';
+    let tableDichVuPaging = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        window.tableDichVuPaging = new TablePagination({
+            instanceName: 'tableDichVuPaging',
+            tableId: 'tableDichVu',
+            tbodyId: 'tbodyDichVu',
+            paginationContainerId: 'pagingDichVu',
+            infoLabelId: 'lblPagingInfoDV',
+            pageSize: 10
+        });
+    });
+
+    function filterDichVu() {
+        const query = (document.getElementById('txtSearchDV').value || '').toLowerCase().trim();
+        const rows = Array.from(document.querySelectorAll('#tbodyDichVu tr')).filter(r => !r.querySelector('td[colspan]'));
+        const matched = rows.filter(r => r.innerText.toLowerCase().includes(query));
+        document.getElementById('lblTotalDV').innerText = matched.length;
+        if (window.tableDichVuPaging) {
+            window.tableDichVuPaging.setFilteredRows(matched);
+        }
+    }
+
+    function openAddDichVuModal() {
+        document.getElementById('modalDichVuTitle').innerHTML = '<i class="bi bi-plus-circle text-primary"></i> Thêm dịch vụ mới';
+        document.getElementById('dvActionType').value = 'add';
+        document.getElementById('txtMaDV').value = '';
+        document.getElementById('txtMaDV').readOnly = false;
+        document.getElementById('txtTenDV').value = '';
+        document.getElementById('txtDonGia').value = '';
+        document.getElementById('txtMoTa').value = '';
+        document.getElementById('dvModalError').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('modalDichVu')).show();
+    }
+
+    function openEditDichVuModal(maDV, tenDV, donGia, moTa) {
+        document.getElementById('modalDichVuTitle').innerHTML = '<i class="bi bi-pencil-square text-primary"></i> Cập nhật dịch vụ';
+        document.getElementById('dvActionType').value = 'edit';
+        document.getElementById('txtMaDV').value = maDV;
+        document.getElementById('txtMaDV').readOnly = true;
+        document.getElementById('txtTenDV').value = tenDV;
+        document.getElementById('txtDonGia').value = donGia;
+        document.getElementById('txtMoTa').value = moTa || '';
+        document.getElementById('dvModalError').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('modalDichVu')).show();
+    }
+
+    async function saveDichVu(e) {
+        e.preventDefault();
+        const actionType = document.getElementById('dvActionType').value;
+        const maDV = document.getElementById('txtMaDV').value.trim();
+        const tenDV = document.getElementById('txtTenDV').value.trim();
+        const donGia = parseFloat(document.getElementById('txtDonGia').value);
+        const moTa = document.getElementById('txtMoTa').value.trim();
+        const errDiv = document.getElementById('dvModalError');
+
+        if (!maDV || !tenDV) {
+            errDiv.innerText = 'Vui lòng nhập đầy đủ Mã dịch vụ và Tên dịch vụ!';
+            errDiv.classList.remove('d-none');
+            return;
+        }
+
+        if (isNaN(donGia) || donGia < 0) {
+            errDiv.innerText = 'Đơn giá phải là số lớn hơn hoặc bằng 0!';
+            errDiv.classList.remove('d-none');
+            return;
+        }
+
+        const url = actionType === 'add' ? '/Home/ThemDichVu' : '/Home/CapNhatDichVu';
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maDV, tenDV, donGia, moTa })
+            });
+            const data = await res.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalDichVu')).hide();
+                window.location.reload();
+            } else {
+                errDiv.innerText = data.message || 'Không thể lưu dịch vụ!';
+                errDiv.classList.remove('d-none');
+            }
+        } catch (ex) {
+            errDiv.innerText = 'Lỗi kết nối máy chủ!';
+            errDiv.classList.remove('d-none');
+        }
+    }
+
+    function confirmDeleteDichVu(maDV, tenDV) {
+        currentDeleteMaDV = maDV;
+        document.getElementById('delDVCode').innerText = maDV;
+        document.getElementById('delDVName').innerText = tenDV;
+        new bootstrap.Modal(document.getElementById('modalDeleteDV')).show();
+    }
+
+    async function doDeleteDichVu() {
+        if (!currentDeleteMaDV) return;
+        try {
+            const res = await fetch('/Home/XoaDichVu', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maDV: currentDeleteMaDV })
+            });
+            const data = await res.json();
+            bootstrap.Modal.getInstance(document.getElementById('modalDeleteDV')).hide();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Không thể xóa dịch vụ này!');
+            }
+        } catch {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+</script>
+}

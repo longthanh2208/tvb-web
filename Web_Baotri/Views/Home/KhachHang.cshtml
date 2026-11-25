@@ -1,0 +1,560 @@
+@model IEnumerable<Web_Baotri.Models.KhachHangItemViewModel>
+@{
+    ViewData["Title"] = "Hồ sơ khách hàng & Nhắc lịch bảo dưỡng";
+}
+
+<div class="container-fluid px-4 py-4">
+    <!-- Header Title & Action -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+        <div>
+            <h4 class="fw-bold text-dark mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-people text-primary"></i>
+                Hồ sơ khách hàng & Nhắc lịch bảo dưỡng
+            </h4>
+            <div class="text-muted fs-7">Theo dõi chu kỳ bảo dưỡng xe định kỳ (90 ngày) và lịch sử chăm sóc khách hàng</div>
+        </div>
+    </div>
+
+    <!-- CHÚ THÍCH MÀU SẮC (THEO ĐÚNG TIÊU CHÍ ĐỀ BÀI) -->
+    <div class="card border-0 shadow-xs rounded-4 p-3 mb-3 bg-white">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex flex-wrap align-items-center gap-3 fs-7">
+                <span class="fw-bold text-dark me-1"><i class="bi bi-info-circle text-primary me-1"></i> Chú thích trạng thái:</span>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-exclamation-circle-fill"></i> Đỏ: Quá hạn (>90 ngày) & Chưa nhắc lịch
+                </span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-check-circle-fill"></i> Xanh lá: Đã gọi nhắc lịch bảo dưỡng
+                </span>
+                <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                    <i class="bi bi-shield-check"></i> Xám: Chưa đến hạn bảo dưỡng (Bình thường)
+                </span>
+            </div>
+            <!-- Quick Filter Pills -->
+            <div class="btn-group btn-group-sm rounded-3 overflow-hidden border" role="group">
+                <button type="button" class="btn btn-light active fw-semibold" id="filter-all" onclick="setFilterStatus('all')">Tất cả</button>
+                <button type="button" class="btn btn-light text-danger fw-semibold" id="filter-cannhac" onclick="setFilterStatus('CanNhac')">Cần nhắc lịch</button>
+                <button type="button" class="btn btn-light text-success fw-semibold" id="filter-danhac" onclick="setFilterStatus('DaNhac')">Đã nhắc</button>
+                <button type="button" class="btn btn-light text-secondary fw-semibold" id="filter-binhthuong" onclick="setFilterStatus('BinhThuong')">Bình thường</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="card border-0 shadow-xs rounded-4 p-3 mb-4 bg-white">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted rounded-start-3">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="txtSearchKH" class="form-control bg-light border-start-0 rounded-end-3" 
+                           placeholder="Tìm nhanh theo Tên khách, Số điện thoại hoặc Biển số xe..." onkeyup="filterKhachHang()">
+                </div>
+            </div>
+            <div class="col-md-6 text-md-end text-muted fs-7">
+                Hiển thị: <span class="fw-bold text-primary" id="lblCountKH">@(Model?.Count() ?? 0)</span> khách hàng & xe
+            </div>
+        </div>
+    </div>
+
+    <!-- BẢNG DỮ LIỆU 7 CỘT CHUẨN ĐỒNG BỘ -->
+    <div class="card border-0 shadow-xs rounded-4 bg-white overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tableKhachHang">
+                <thead class="bg-light text-secondary fs-8 text-uppercase border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3" style="width: 220px;">1. Khách hàng</th>
+                        <th class="py-3" style="width: 130px;">2. Số điện thoại</th>
+                        <th class="py-3" style="width: 220px;">3. Xe sở hữu</th>
+                        <th class="py-3" style="width: 130px;">4. ODO hiện tại</th>
+                        <th class="py-3" style="width: 140px;">5. Bảo dưỡng cuối</th>
+                        <th class="py-3" style="width: 170px;">6. Trạng thái nhắc lịch</th>
+                        <th class="text-end pe-4 py-3" style="width: 210px;">7. Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody class="fs-7" id="tbodyKhachHang">
+                    @if (Model != null && Model.Any())
+                    {
+                        foreach (var item in Model)
+                        {
+                            string status = item.TrangThaiNhacLich;
+                            <tr id="row-kh-@item.MaKH-@(item.BienSo ?? "none")" data-status="@status">
+                                <!-- 1. Khách hàng (HoTen + DiaChi) -->
+                                <td class="ps-4">
+                                    <div class="fw-bold text-dark">@item.HoTen</div>
+                                    <div class="text-muted fs-8">@(string.IsNullOrWhiteSpace(item.DiaChi) ? "Chưa có địa chỉ" : item.DiaChi)</div>
+                                </td>
+                                <!-- 2. Số điện thoại -->
+                                <td>
+                                    <a href="tel:@item.SoDienThoai" class="text-decoration-none text-dark fw-semibold">
+                                        <i class="bi bi-telephone text-primary me-1"></i>@item.SoDienThoai
+                                    </a>
+                                </td>
+                                <!-- 3. Xe sở hữu (BienSo + DongXe badge) -->
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.BienSo))
+                                    {
+                                        <div class="d-inline-flex flex-column gap-1">
+                                            <span class="badge bg-light text-primary border border-primary-subtle fw-bold fs-7 px-2.5 py-1 rounded-2">
+                                                <i class="bi bi-bicycle me-1"></i>@item.BienSo
+                                            </span>
+                                            <span class="text-muted fs-8">@(string.IsNullOrEmpty(item.DongXe) ? "Xe máy" : item.DongXe)</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fs-8">Chưa có thông tin xe</span>
+                                    }
+                                </td>
+                                <!-- 4. ODO hiện tại -->
+                                <td>
+                                    <span class="fw-semibold text-secondary">
+                                        @((item.SoODOHienTai ?? 0).ToString("#,##0")) km
+                                    </span>
+                                </td>
+                                <!-- 5. Bảo dưỡng cuối -->
+                                <td>
+                                    @if (item.NgayBaoDuongCuoi.HasValue)
+                                    {
+                                        <div class="fw-semibold text-dark">@item.NgayBaoDuongCuoi.Value.ToString("yyyy-MM-dd")</div>
+                                        @if (item.SoNgayChuaBaoDuong.HasValue)
+                                        {
+                                            <div class="fs-8 text-muted">(@item.SoNgayChuaBaoDuong ngày trước)</div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted fs-8">Chưa bảo dưỡng</span>
+                                    }
+                                </td>
+                                <!-- 6. Trạng thái nhắc lịch (Đỏ / Xanh lá / Xám) -->
+                                <td id="status-cell-@item.MaKH">
+                                    @if (status == "CanNhac")
+                                    {
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-exclamation-circle-fill"></i> Cần nhắc lịch (>90 ngày)
+                                        </span>
+                                    }
+                                    else if (status == "DaNhac")
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-check-circle-fill"></i> Đã nhắc lịch
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1.5 rounded-2 d-inline-flex align-items-center gap-1">
+                                            <i class="bi bi-shield-check"></i> Bình thường
+                                        </span>
+                                    }
+                                </td>
+                                <!-- 7. Thao tác -->
+                                <td class="text-end pe-4">
+                                    <div class="d-flex align-items-center justify-content-end gap-1">
+                                        <!-- Nút Gọi / Đã nhắc lịch -->
+                                        @if (status == "CanNhac")
+                                        {
+                                            <button class="btn btn-sm btn-outline-danger rounded-2 px-2 py-1" 
+                                                    title="Đã gọi nhắc bảo dưỡng" 
+                                                    id="btn-nhac-@item.MaKH"
+                                                    onclick="markDaNhacLich(@item.MaKH)">
+                                                <i class="bi bi-telephone-outbound"></i> Đã nhắc
+                                            </button>
+                                        }
+                                        else if (status == "DaNhac")
+                                        {
+                                            <button class="btn btn-sm btn-outline-secondary rounded-2 px-2 py-1" 
+                                                    title="Hủy đánh dấu đã nhắc" 
+                                                    id="btn-nhac-@item.MaKH"
+                                                    onclick="markChuaNhacLich(@item.MaKH)">
+                                                <i class="bi bi-arrow-counterclockwise"></i>
+                                            </button>
+                                        }
+
+                                        <!-- Nút Lịch sử bảo dưỡng -->
+                                        @if (!string.IsNullOrEmpty(item.BienSo))
+                                        {
+                                            <button class="btn btn-sm btn-light border text-primary rounded-2 px-2 py-1" 
+                                                    title="Xem sổ bảo dưỡng & lịch sử" 
+                                                    onclick="openLichSuXeModal('@item.BienSo')">
+                                                <i class="bi bi-clipboard2-pulse"></i> Sổ BD
+                                            </button>
+                                        }
+
+                                        <!-- Nút Tiếp nhận ngay -->
+                                        @if (!string.IsNullOrEmpty(item.BienSo))
+                                        {
+                                            <a href="/?bienSo=@item.BienSo&tenKhach=@System.Net.WebUtility.UrlEncode(item.HoTen)&sdt=@item.SoDienThoai&dongXe=@System.Net.WebUtility.UrlEncode(item.DongXe ?? "")&odo=@(item.SoODOHienTai ?? 0)" 
+                                               class="btn btn-sm btn-primary rounded-2 px-2 py-1" 
+                                               title="Đẩy tự động sang Bàn tiếp nhận">
+                                                <i class="bi bi-lightning-charge-fill"></i> Tiếp nhận
+                                            </a>
+                                        }
+
+                                        <!-- Nút Sửa thông tin -->
+                                        <button class="btn btn-sm btn-light border text-secondary rounded-2 px-2 py-1" 
+                                                title="Sửa thông tin khách hàng"
+                                                onclick="openEditKHModal(@item.MaKH, '@item.HoTen', '@item.SoDienThoai', '@(item.DiaChi ?? "")')">
+                                            <i class="bi bi-pencil"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-people fs-2 d-block mb-2"></i>
+                                Chưa có dữ liệu khách hàng
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <!-- Card Footer Phân Trang: 10 dòng / trang -->
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+            <div class="text-muted fs-7" id="lblPagingInfoKH">
+                Hiển thị 1 - 10 trên tổng @(Model?.Count() ?? 0) khách hàng & xe (10 dòng/trang)
+            </div>
+            <nav id="pagingKhachHang"></nav>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SỬA THÔNG TIN KHÁCH HÀNG -->
+<div class="modal fade" id="modalEditKH" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-person-gear text-primary"></i>
+                    Cập nhật thông tin khách hàng
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="formEditKH" onsubmit="saveKhachHang(event)">
+                    <input type="hidden" id="editMaKH" />
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Họ và tên khách hàng <span class="text-danger">*</span></label>
+                        <input type="text" id="editHoTen" class="form-control rounded-3" required minlength="2">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" id="editSoDienThoai" class="form-control rounded-3" required maxlength="10" pattern="^0[0-9]{9}$" placeholder="0xxxxxxxxx">
+                        <div class="text-muted fs-8 mt-1">Đúng 10 chữ số bắt đầu bằng số 0</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark fs-7">Địa chỉ</label>
+                        <input type="text" id="editDiaChi" class="form-control rounded-3" placeholder="Số nhà, đường, phường/xã...">
+                    </div>
+
+                    <div id="editKHError" class="alert alert-danger fs-7 py-2 d-none mb-3"></div>
+
+                    <div class="d-flex justify-content-end gap-2 pt-2">
+                        <button type="button" class="btn btn-light px-3 rounded-3" data-bs-dismiss="modal">Hủy bỏ</button>
+                        <button type="submit" class="btn btn-primary px-4 rounded-3 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i> Lưu thay đổi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL SỔ BẢO DƯỠNG & LỊCH SỬ SỬA CHỮA -->
+<div class="modal fade" id="modalLichSuXe" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-bottom py-3">
+                <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                    <i class="bi bi-journal-check text-primary"></i>
+                    Sổ bảo dưỡng điện tử: <span id="soBienSoTitle" class="text-primary"></span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Vehicle Info Banner -->
+                <div class="bg-light rounded-3 p-3 mb-4">
+                    <div class="row g-2 fs-7">
+                        <div class="col-sm-6"><b>Chủ xe:</b> <span id="soTenChuXe">—</span></div>
+                        <div class="col-sm-6"><b>Dòng xe:</b> <span id="soDongXe">—</span></div>
+                        <div class="col-sm-6"><b>Số ODO hiện tại:</b> <span id="soODOHienTai" class="fw-bold text-primary">—</span> km</div>
+                        <div class="col-sm-6"><b>Bảo dưỡng cuối:</b> <span id="soBaoDuongCuoi">—</span></div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-secondary"></i>
+                    Lịch sử các lần sửa chữa đã hoàn thành
+                </h6>
+
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle border mb-0 rounded-3 overflow-hidden">
+                        <thead class="bg-light fs-8 text-uppercase">
+                            <tr>
+                                <th class="ps-3 py-2">Mã phiếu</th>
+                                <th class="py-2">Ngày tiếp nhận</th>
+                                <th class="py-2">Ngày hoàn tất</th>
+                                <th class="py-2">ODO nhận</th>
+                                <th class="py-2">Tổng tiền</th>
+                                <th class="text-end pe-3 py-2">Chi tiết</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyLichSuPhieu" class="fs-7">
+                            <tr><td colspan="6" class="text-center py-4 text-muted">Đang tải lịch sử...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Accordion or detail list for items -->
+                <div id="boxChiTietPhieuCu" class="mt-4 p-3 bg-light rounded-3 border d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark fs-7" id="titleChiTietPhieuCu">Chi tiết hạng mục</span>
+                        <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" onclick="document.getElementById('boxChiTietPhieuCu').classList.add('d-none')">Đóng</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered bg-white mb-0 fs-8">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>Loại</th>
+                                    <th>Tên hạng mục</th>
+                                    <th class="text-center">Số lượng</th>
+                                    <th class="text-end">Đơn giá</th>
+                                    <th class="text-end">Thành tiền</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbodyChiTietHangMucCu"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top py-2">
+                <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    let activeFilterStatus = 'all';
+    let tableKhachHangPaging = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        window.tableKhachHangPaging = new TablePagination({
+            instanceName: 'tableKhachHangPaging',
+            tableId: 'tableKhachHang',
+            tbodyId: 'tbodyKhachHang',
+            paginationContainerId: 'pagingKhachHang',
+            infoLabelId: 'lblPagingInfoKH',
+            pageSize: 10
+        });
+    });
+
+    function setFilterStatus(status) {
+        activeFilterStatus = status;
+        document.querySelectorAll('[id^="filter-"]').forEach(btn => btn.classList.remove('active', 'btn-primary'));
+        document.getElementById('filter-' + status.toLowerCase()).classList.add('active');
+        filterKhachHang();
+    }
+
+    function filterKhachHang() {
+        const query = (document.getElementById('txtSearchKH').value || '').toLowerCase().trim();
+        const rows = Array.from(document.querySelectorAll('#tbodyKhachHang tr')).filter(r => !r.querySelector('td[colspan]'));
+
+        const matched = rows.filter(row => {
+            const text = row.innerText.toLowerCase();
+            const status = row.getAttribute('data-status');
+            const matchQuery = text.includes(query);
+            const matchStatus = activeFilterStatus === 'all' || status === activeFilterStatus;
+            return matchQuery && matchStatus;
+        });
+
+        document.getElementById('lblCountKH').innerText = matched.length;
+        if (window.tableKhachHangPaging) {
+            window.tableKhachHangPaging.setFilteredRows(matched);
+        }
+    }
+
+    async function markDaNhacLich(maKH) {
+        if (!confirm('Xác nhận đã gọi điện nhắc lịch bảo dưỡng cho khách hàng này?')) return;
+        try {
+            const res = await fetch('/Home/DanhDauDaNhac', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maKH: maKH, daNhac: true })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || 'Không thể cập nhật!');
+            }
+        } catch {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+
+    async function markChuaNhacLich(maKH) {
+        try {
+            const res = await fetch('/Home/DanhDauDaNhac', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maKH: maKH, daNhac: false })
+            });
+            const data = await res.json();
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch {
+            alert('Lỗi kết nối máy chủ!');
+        }
+    }
+
+    function openEditKHModal(maKH, hoTen, sdt, diaChi) {
+        document.getElementById('editMaKH').value = maKH;
+        document.getElementById('editHoTen').value = hoTen;
+        document.getElementById('editSoDienThoai').value = sdt;
+        document.getElementById('editDiaChi').value = diaChi || '';
+        document.getElementById('editKHError').classList.add('d-none');
+        new bootstrap.Modal(document.getElementById('modalEditKH')).show();
+    }
+
+    async function saveKhachHang(e) {
+        e.preventDefault();
+        const maKH = parseInt(document.getElementById('editMaKH').value);
+        const hoTen = document.getElementById('editHoTen').value.trim();
+        const sdt = document.getElementById('editSoDienThoai').value.trim();
+        const diaChi = document.getElementById('editDiaChi').value.trim();
+        const errDiv = document.getElementById('editKHError');
+
+        if (!hoTen || !sdt) {
+            errDiv.innerText = 'Vui lòng nhập tên và số điện thoại!';
+            errDiv.classList.remove('d-none');
+            return;
+        }
+
+        if (!/^0[0-9]{9}$/.test(sdt)) {
+            errDiv.innerText = 'Số điện thoại phải gồm đúng 10 chữ số và bắt đầu bằng số 0!';
+            errDiv.classList.remove('d-none');
+            return;
+        }
+
+        try {
+            const res = await fetch('/Home/CapNhatKhachHang', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ maKH, hoTen, soDienThoai: sdt, diaChi })
+            });
+            const data = await res.json();
+            if (data.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalEditKH')).hide();
+                window.location.reload();
+            } else {
+                errDiv.innerText = data.message || 'Không thể lưu!';
+                errDiv.classList.remove('d-none');
+            }
+        } catch {
+            errDiv.innerText = 'Lỗi kết nối máy chủ!';
+            errDiv.classList.remove('d-none');
+        }
+    }
+
+    async function openLichSuXeModal(bienSo) {
+        document.getElementById('soBienSoTitle').innerText = bienSo;
+        document.getElementById('boxChiTietPhieuCu').classList.add('d-none');
+        const modal = new bootstrap.Modal(document.getElementById('modalLichSuXe'));
+        modal.show();
+
+        try {
+            const res = await fetch('/Home/TraCuuSoBaoDuong?bienSo=' + encodeURIComponent(bienSo));
+            const data = await res.json();
+            if (data.success) {
+                const xe = data.thongTinXe || {};
+                document.getElementById('soTenChuXe').innerText = xe.tenChuXe || xe.TenChuXe || '—';
+                document.getElementById('soDongXe').innerText = xe.dongXe || xe.DongXe || '—';
+                const odo = xe.soODOHienTai || xe.SoODOHienTai || 0;
+                document.getElementById('soODOHienTai').innerText = odo.toLocaleString();
+                const ngayBD = xe.ngayBaoDuongCuoi || xe.NgayBaoDuongCuoi;
+                document.getElementById('soBaoDuongCuoi').innerText = ngayBD ? new Date(ngayBD).toISOString().split('T')[0] : 'Chưa có';
+
+                const lichSu = data.lichSu || [];
+                const tbody = document.getElementById('tbodyLichSuPhieu');
+                if (lichSu.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-3 text-muted">Chưa có lịch sử sửa chữa hoàn thành nào</td></tr>';
+                } else {
+                    let html = '';
+                    lichSu.forEach(p => {
+                        const maPhieu = p.maPhieu || p.MaPhieu;
+                        const ngayTN = p.ngayTiepNhan || p.NgayTiepNhan;
+                        const ngayHT = p.ngayHoanThanh || p.NgayHoanThanh;
+                        const odoNhan = p.soODOLucNhan || p.SoODOLucNhan || 0;
+                        const tongTien = p.tongTien || p.TongTien || 0;
+                        html += `
+                            <tr>
+                                <td class="ps-3 fw-bold text-primary">#${maPhieu}</td>
+                                <td>${ngayTN ? new Date(ngayTN).toLocaleDateString('vi-VN') : '—'}</td>
+                                <td>${ngayHT ? new Date(ngayHT).toLocaleDateString('vi-VN') : '—'}</td>
+                                <td>${odoNhan.toLocaleString()} km</td>
+                                <td class="fw-bold text-success">${tongTien.toLocaleString()} đ</td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-light border text-primary px-2 py-0.5 rounded-2" onclick="xemChiTietPhieuCu(${maPhieu}, '${bienSo}')">
+                                        <i class="bi bi-eye"></i> Xem
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    tbody.innerHTML = html;
+                }
+            }
+        } catch {
+            document.getElementById('tbodyLichSuPhieu').innerHTML = '<tr><td colspan="6" class="text-center py-3 text-danger">Lỗi tải dữ liệu</td></tr>';
+        }
+    }
+
+    async function xemChiTietPhieuCu(maPhieu, bienSo) {
+        const box = document.getElementById('boxChiTietPhieuCu');
+        document.getElementById('titleChiTietPhieuCu').innerText = `Chi tiết phụ tùng & dịch vụ của phiếu #${maPhieu}`;
+        box.classList.remove('d-none');
+        const tbody = document.getElementById('tbodyChiTietHangMucCu');
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-2 text-muted">Đang tải chi tiết...</td></tr>';
+
+        try {
+            const res = await fetch(`/Home/GetChiTietLichSuPhieu?maPhieu=${maPhieu}&bienSo=${encodeURIComponent(bienSo)}`);
+            const data = await res.json();
+            if (data.success && data.data && data.data.length > 0) {
+                let html = '';
+                data.data.forEach(item => {
+                    const loai = item.loaiMuc || item.LoaiMuc;
+                    const loaiBadge = loai === 'PhuTung' ? '<span class="badge bg-warning-subtle text-warning-emphasis">Phụ tùng</span>' : '<span class="badge bg-info-subtle text-info-emphasis">Dịch vụ</span>';
+                    const ten = item.tenHangMuc || item.TenHangMuc;
+                    const sl = item.soLuong || item.SoLuong;
+                    const gia = item.donGiaLucBan || item.DonGiaLucBan || 0;
+                    const thanhTien = item.thanhTien || item.ThanhTien || 0;
+                    html += `
+                        <tr>
+                            <td>${loaiBadge}</td>
+                            <td class="fw-semibold">${ten}</td>
+                            <td class="text-center">${sl}</td>
+                            <td class="text-end">${gia.toLocaleString()} đ</td>
+                            <td class="text-end fw-bold text-success">${thanhTien.toLocaleString()} đ</td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-2 text-muted">Không có chi tiết hạng mục</td></tr>';
+            }
+        } catch {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-2 text-danger">Lỗi tải chi tiết hạng mục</td></tr>';
+        }
+    }
+</script>
+}

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TVB - Bàn tiếp nhận & Điều phối dịch vụ xe máy</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body class="bg-app">
+    <!-- TOP NAVIGATION BAR -->
+    <header class="navbar-header bg-white border-bottom shadow-xs sticky-top">
+        <div class="container-fluid px-3 d-flex align-items-center justify-content-between">
+            <!-- Brand Left -->
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-icon border-0 p-1 text-secondary" type="button" title="Menu">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+                <a class="navbar-brand d-flex align-items-center gap-2 m-0 text-decoration-none" href="/">
+                    <span class="brand-logo text-primary fw-bold fs-4 tracking-tight">TVB</span>
+                    <span class="brand-subtext text-dark fw-semibold fs-6">Dịch vụ Xe máy</span>
+                </a>
+            </div>
+
+            <!-- Center Navigation Links -->
+            @{
+                string activeTab = ViewBag.ActiveTab as string ?? "TiepNhan";
+            }
+            <nav class="nav-center d-none d-md-flex align-items-center">
+                <a href="/" class="nav-tab-item @(activeTab == "TiepNhan" ? "active" : "")">
+                    <i class="bi bi-house-door-fill"></i>
+                    <span>Bàn tiếp nhận</span>
+                </a>
+                <a href="/Home/DichVu" class="nav-tab-item @(activeTab == "DichVu" ? "active" : "")">
+                    <i class="bi bi-wrench-adjustable"></i>
+                    <span>Quản lý dịch vụ</span>
+                </a>
+                <a href="/Home/LichHen" class="nav-tab-item @(activeTab == "LichHen" ? "active" : "")">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Lịch hẹn</span>
+                </a>
+                <a href="/Home/KhachHang" class="nav-tab-item @(activeTab == "KhachHang" ? "active" : "")">
+                    <i class="bi bi-people"></i>
+                    <span>Khách hàng</span>
+                </a>
+                <a href="/Home/BaoCao" class="nav-tab-item @(activeTab == "BaoCao" ? "active" : "")">
+                    <i class="bi bi-bar-chart-line"></i>
+                    <span>Báo cáo</span>
+                </a>
+            </nav>
+
+            <!-- User Account Dropdown (Phần tài khoản) -->
+            <div class="user-account-dropdown dropdown">
+                <a href="javascript:void(0)" class="d-flex align-items-center gap-2 text-decoration-none dropdown-toggle no-caret px-2 py-1 rounded-3 hover-bg" id="userMenuDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-fill fs-5"></i>
+                    </div>
+                    <div class="d-flex flex-column text-start lh-1">
+                        <span class="user-name fw-bold text-dark fs-7" id="navUserHoTen">Lễ Tân</span>
+                        <span class="user-role text-muted fs-8" id="navUserVaiTro">Tiếp nhận</span>
+                    </div>
+                    <i class="bi bi-chevron-down text-muted fs-8 ms-1"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2 rounded-3 py-2" aria-labelledby="userMenuDropdown">
+                    <li class="px-3 py-2 border-bottom">
+                        <div class="fw-bold text-dark" id="dropUserHoTen">Lễ Tân</div>
+                        <small class="text-muted" id="dropUserTenDangNhap">@@covan1</small>
+                    </li>
+                    <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalProfile">
+                            <i class="bi bi-person-vcard text-primary"></i> Thông tin tài khoản
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalDanhSachTaiKhoan">
+                            <i class="bi bi-people-fill text-info"></i> Danh sách tài khoản hệ thống
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#modalChangePassword">
+                            <i class="bi bi-key text-warning"></i> Đổi mật khẩu
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 text-danger" onclick="logoutUser()">
+                            <i class="bi bi-box-arrow-right"></i> Đăng xuất
+                        </button>
+                    </li>
+                    <li>
+                        <button class="dropdown-item py-2 d-flex align-items-center gap-2 text-primary" data-bs-toggle="modal" data-bs-target="#modalLogin">
+                            <i class="bi bi-arrow-repeat"></i> Chuyển tài khoản khác
+                        </button>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN BODY -->
+    <main class="main-content">
+        @RenderBody()
+    </main>
+
+    <!-- MODAL: THÔNG TIN TÀI KHOẢN -->
+    <div class="modal fade" id="modalProfile" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-person-circle text-primary me-2"></i>Thông tin tài khoản</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card bg-light border-0 rounded-3 p-3 mb-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="avatar-large bg-primary text-white rounded-circle d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-fill fs-2"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-1" id="profHoTen">Lễ Tân</h6>
+                                <span class="badge bg-primary-subtle text-primary fw-semibold" id="profVaiTro">Tiếp nhận / Cố vấn dịch vụ</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="list-group list-group-flush rounded-3">
+                        <div class="list-group-item d-flex justify-content-between px-2">
+                            <span class="text-muted">Mã tài khoản:</span>
+                            <span class="fw-semibold" id="profMaTK">2</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-2">
+                            <span class="text-muted">Tên đăng nhập:</span>
+                            <span class="fw-semibold" id="profTenDangNhap">covan1</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-2">
+                            <span class="text-muted">Trạng thái:</span>
+                            <span class="badge bg-success-subtle text-success">Đang hoạt động</span>
+                        </div>
+                        <div class="list-group-item d-flex justify-content-between px-2">
+                            <span class="text-muted">Chi nhánh:</span>
+                            <span class="fw-semibold">Trung tâm TVB</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: DANH SÁCH TÀI KHOẢN HỆ THỐNG -->
+    <div class="modal fade" id="modalDanhSachTaiKhoan" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-people-fill text-primary me-2"></i>Danh sách tài khoản hệ thống TVB</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted fs-7 mb-3">Danh sách các tài khoản nhân sự được cấp phép truy cập hệ thống bảo trì xe máy:</p>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light fs-8 text-uppercase">
+                                <tr>
+                                    <th>Mã TK</th>
+                                    <th>Họ tên</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Vai trò</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tblListTaiKhoan" class="fs-7">
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-3">Đang tải danh sách tài khoản...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ĐỔI MẬT KHẨU -->
+    <div class="modal fade" id="modalChangePassword" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-key-fill text-warning me-2"></i>Đổi mật khẩu</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <div class="mb-3">
+                        <label class="form-label text-muted fs-7">Mật khẩu hiện tại</label>
+                        <input type="password" id="passMatKhauCu" class="form-control rounded-3" placeholder="Nhập mật khẩu hiện tại">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fs-7">Mật khẩu mới</label>
+                        <input type="password" id="passMatKhauMoi" class="form-control rounded-3" placeholder="Nhập mật khẩu mới">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fs-7">Xác nhận mật khẩu mới</label>
+                        <input type="password" id="passXacNhan" class="form-control rounded-3" placeholder="Nhập lại mật khẩu mới">
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 border" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="submitChangePassword()">Lưu thay đổi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: ĐĂNG NHẬP -->
+    <div class="modal fade" id="modalLogin" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow rounded-4">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-box-arrow-in-right text-primary me-2"></i>Đăng nhập hệ thống</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body pt-0">
+                    <div class="mb-3">
+                        <label class="form-label text-muted fs-7">Tên đăng nhập</label>
+                        <input type="text" id="loginUsername" class="form-control rounded-3" placeholder="admin, covan1, ktv1...">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted fs-7">Mật khẩu</label>
+                        <input type="password" id="loginPassword" class="form-control rounded-3" placeholder="Mật khẩu (mặc định 123456)">
+                    </div>
+                    <div class="alert alert-info py-2 fs-8 rounded-3 mb-0">
+                        <i class="bi bi-info-circle me-1"></i> Tài khoản mẫu: <strong>covan1</strong> (Lễ tân), <strong>admin</strong> (Quản trị), pass: <strong>123456</strong>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light rounded-pill px-4 border" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4" onclick="submitLogin()">Đăng nhập</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="appToast" class="toast align-items-center text-white bg-primary border-0 rounded-3 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body" id="toastMessage">Thông báo</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
